@@ -46,18 +46,24 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
 
   loki:
-    image: grafana/loki:2.9.1
+    image: grafana/loki:latest
     ports:
       - "3100:3100"
+    healthcheck:
+        test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+        interval: 5s
+        retries: 10
+        start_period: 5s
     command: -config.file=/etc/loki/local-config.yaml
 
   fluent-bit:
-    image: cr.fluentbit.io/fluent/fluent-bit:2.2.2
+    image: fluent/fluent-bit:latest-debug
     volumes:
       - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
       - ./logs:/app/logs
     depends_on:
-      - loki
+      loki:
+        condition: service_healthy
 
 volumes:
   db-data:
